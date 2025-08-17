@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FF Kingdom - Premium Diamond Shop</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+  
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: radial-gradient(circle at 10% 20%, #1a1a2e 0%, #16213e 90%);
+    min-height: 100vh;
+  }
+  
+  .diamond-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .diamond-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      to bottom right,
+      rgba(255, 255, 255, 0) 45%,
+      rgba(255, 255, 255, 0.8) 50%,
+      rgba(255, 255, 255, 0) 55%
+    );
+    transform: rotate(30deg);
+    animation: shine 3s infinite;
+  }
+  
+  @keyframes shine {
+    0% { transform: translateX(-100%) rotate(30deg); }
+    100% { transform: translateX(100%) rotate(30deg); }
+  }
+  
+  .package-card {
+    transition: all 0.3s ease;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+  
+  .package-card:hover {
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .modal-content {
+    animation: modalFadeIn 0.3s ease-out;
+  }
+  
+  @keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  .glow-text {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+  }
+  
+  .gradient-text {
+    background: linear-gradient(45deg, #f3ec78, #af4261);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .order-status-pending {
+    background: linear-gradient(45deg, #f6d365, #fda085);
+  }
+  
+  .order-status-processing {
+    background: linear-gradient(45deg, #a1c4fd, #c2e9fb);
+  }
+  
+  .order-status-completed {
+    background: linear-gradient(45deg, #84fab0, #8fd3f4);
+  }
+  
+  .order-status-rejected {
+    background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+  }
+  
+  .status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .invoice-card {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+  }
+  
+  .invoice-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  }
+  
+  .floating-diamond {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.2;
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+    100% { transform: translateY(0) rotate(360deg); }
+  }
+  
+  .login-required {
+    position: relative;
+  }
+  
+  .login-required::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 0.75rem;
+    z-index: 10;
+  }
+  
+  .login-required::after {
+    content: 'Login to Purchase';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(45deg, #f3ec78, #af4261);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: bold;
+    font-size: 1.25rem;
+    z-index: 11;
+    white-space: nowrap;
+  }
+  
+  .loading-spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top: 4px solid #fff;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body class="text-white flex flex-col items-center p-4 pb-10">
+
+<!-- Floating Diamonds Background -->
+<div class="fixed inset-0 overflow-hidden z-0 opacity-20">
+  <div class="floating-diamond top-10 left-10 w-4 h-4 bg-blue-400" style="animation-delay: 0s"></div>
+  <div class="floating-diamond top-1/4 right-20 w-6 h-6 bg-yellow-400" style="animation-delay: 1s"></div>
+  <div class="floating-diamond bottom-20 left-1/4 w-5 h-5 bg-green-400" style="animation-delay: 1.5s"></div>
+  <div class="floating-diamond top-3/4 right-1/3 w-3 h-3 bg-red-400" style="animation-delay: 2s"></div>
+  <div class="floating-diamond bottom-1/3 right-10 w-7 h-7 bg-purple-400" style="animation-delay: 0.5s"></div>
+</div>
+
+<!-- Header with Login -->
+<header class="w-full max-w-6xl flex justify-between items-center mb-6 z-10">
+  <div class="flex items-center">
+    <div class="diamond-shine w-12 h-12 bg-yellow-400 rounded-lg rotate-45 mr-3"></div>
+    <h1 class="text-4xl font-extrabold gradient-text">FF Kingdom</h1>
+  </div>
+  <div class="flex items-center space-x-4">
+    <button onclick="openOrdersModal()" id="orders-button" class="hidden bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 p-3 px-6 rounded-full font-bold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center">
+      <span class="mr-2">My Orders</span> 
+      <i class="fas fa-shopping-bag"></i>
+    </button>
+    <button onclick="openLoginModal()" id="login-button" class="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 p-3 px-6 rounded-full font-bold transition-all duration-300 shadow-lg hover:shadow-xl flex items-center">
+      <span class="mr-2">Login</span> 
+      <i class="fas fa-sign-in-alt"></i>
+    </button>
+  </div>
+</header>
+
+<!-- Notification Banner -->
+<div id="banner" class="relative bg-gradient-to-r from-yellow-400 to-yellow-500 text-black p-4 rounded-xl mb-6 w-full max-w-6xl text-center font-bold shadow-lg text-lg z-10 overflow-hidden">
+  <div class="absolute inset-0 bg-white opacity-20 animate-pulse"></div>
+  <div class="relative z-10 flex items-center justify-center">
+    <i class="fas fa-exclamation-triangle mr-2"></i>
+    <span id="banner-text">Loading announcement...</span>
+  </div>
+</div>
+
+<!-- Diamond Packages Section -->
+<section class="w-full max-w-6xl mb-8 z-10">
+  <div class="flex items-center justify-center mb-8">
+    <div class="w-16 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent mr-4"></div>
+    <h2 class="text-4xl font-bold text-center glow-text">💎 Diamond Packages</h2>
+    <div class="w-16 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent ml-4"></div>
+  </div>
+  <div id="packages-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div class="flex justify-center items-center py-10">
+      <div class="loading-spinner"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Player Dashboard -->
+<div id="player-dashboard" class="hidden w-full max-w-6xl z-10">
+  <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl shadow-xl border border-gray-700 backdrop-blur-sm">
+    <div class="flex justify-between items-start">
+      <div>
+        <h2 class="text-2xl font-bold mb-1">👋 Welcome back, <span id="player-name" class="text-yellow-400"></span></h2>
+        <p class="text-gray-300 mb-4">Your FF Kingdom dashboard</p>
+        <div class="flex items-center bg-gray-900 p-3 rounded-lg">
+          <div class="diamond-shine w-8 h-8 bg-blue-400 rounded-lg rotate-45 mr-3"></div>
+          <div>
+            <p class="text-sm text-gray-400">Your Diamonds</p>
+            <p class="text-2xl font-bold"><span id="player-diamonds">0</span> 💎</p>
+          </div>
+        </div>
+      </div>
+      <button onclick="logout()" class="bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 p-2 px-4 rounded-full font-medium transition-all duration-300 shadow flex items-center">
+        <span class="mr-1">Logout</span>
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+    
+    <div class="mt-6">
+      <h3 class="text-lg font-semibold mb-3 flex items-center">
+        <i class="fas fa-history mr-2 text-yellow-400"></i>
+        Recent Transactions
+      </h3>
+      <div id="transaction-history" class="bg-gray-900 rounded-lg p-3 max-h-60 overflow-y-auto scrollbar-hide">
+        <p class="text-gray-500 text-center py-4">No recent transactions</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div id="login-modal" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center hidden z-50 backdrop-blur-sm">
+  <div class="modal-content bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 w-11/12 max-w-md">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold gradient-text">Player Authentication</h2>
+      <button onclick="closeLoginModal()" class="text-gray-400 hover:text-white transition-colors">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-gray-300 mb-2">Username</label>
+        <input type="text" id="player-username" placeholder="Enter your username" 
+               class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 transition-all" />
+      </div>
+      <div>
+        <label class="block text-gray-300 mb-2">Email</label>
+        <input type="email" id="player-email" placeholder="Enter your email" 
+               class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 transition-all" />
+      </div>
+    </div>
+    
+    <div class="mt-8 space-y-3">
+      <button onclick="playerLogin()" id="login-submit-btn" class="w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 p-3 rounded-lg font-bold transition-all duration-300 shadow-lg flex items-center justify-center">
+        <i class="fas fa-check-circle mr-2"></i>
+        Login / Register
+      </button>
+      <button onclick="closeLoginModal()" class="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 p-3 rounded-lg font-bold transition-all duration-300 shadow-lg">
+        Cancel
+      </button>
+    </div>
+    
+    <div class="mt-6 pt-6 border-t border-gray-700">
+      <p class="text-gray-400 text-sm text-center">By logging in, you agree to our Terms of Service and Privacy Policy</p>
+    </div>
+  </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="payment-modal" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center hidden z-50 backdrop-blur-sm">
+  <div class="modal-content bg-gradient-to-br from-gray-900 to-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 w-11/12 max-w-md">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-bold gradient-text">Complete Payment</h2>
+      <button onclick="closePaymentModal()" class="text-gray-400 hover:text-white transition-colors">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-gray-300 mb-2">Payment Method</label>
+        <select id="payment-method" class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 appearance-none transition-all">
+          <option value="bkash"><i class="fas fa-mobile-alt mr-2"></i>Bkash</option>
+          <option value="nagad"><i class="fas fa-wallet mr-2"></i>Nagad</option>
+          <option value="rocket"><i class="fas fa-rocket mr-2"></i>Rocket</option>
+        </select>
+      </div>
+      
+      <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-400">Send money to:</span>
+          <span id="payment-number" class="font-bold text-lg">01701798762</span>
+        </div>
+        <div class="text-sm text-gray-500">Use this number for payment</div>
+      </div>
+      
+      <div>
+        <label class="block text-gray-300 mb-2">Your UID (Required)</label>
+        <input type="text" id="player-uid" placeholder="Enter your Free Fire UID" 
+               class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 transition-all" />
+      </div>
+      
+      <div>
+        <label class="block text-gray-300 mb-2">Transaction ID</label>
+        <input type="text" id="transaction-id" placeholder="Enter your transaction ID" 
+               class="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-500/50 transition-all" />
+      </div>
+      
+      <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-gray-400">Package:</span>
+          <span id="payment-package-name" class="font-bold">Loading...</span>
+        </div>
+        <div class="flex justify-between items-center mb-1">
+          <span class="text-gray-400">Diamonds:</span>
+          <span id="payment-package-diamonds" class="font-bold">0</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400">Amount:</span>
+          <span id="payment-package-price" class="text-xl font-bold text-yellow-400">0৳</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="mt-8 space-y-3">
+      <button onclick="submitPayment()" id="payment-submit-btn" class="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 p-3 rounded-lg font-bold transition-all duration-300 shadow-lg flex items-center justify-center">
+        <i class="fas fa-check-circle mr-2"></i>
+        Confirm Payment
+      </button>
+      <button onclick="closePaymentModal()" class="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 p-3 rounded-lg font-bold transition-all duration-300 shadow-lg">
+        Cancel Payment
+      </button>
+    </div>
+    
+    <div class="mt-6 pt-6 border-t border-gray-700">
+      <p class="text-gray-400 text-sm text-center">Diamonds will be added to your account within 15 minutes after verification</p>
+    </div>
+  </div>
+</div>
+
+<!-- Orders Modal -->
+<div id="orders-modal" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center hidden z-50 backdrop-blur-sm p-4">
+  <div class="modal-content bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <div class="flex justify-between items-center p-6 border-b border-gray-700">
+      <h2 class="text-2xl font-bold gradient-text">My Orders</h2>
+      <button onclick="closeOrdersModal()" class="text-gray-400 hover:text-white transition-colors">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="overflow-y-auto max-h-[70vh] p-6">
+      <div id="orders-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Orders will be loaded here -->
+        <div class="text-center py-8">
+          <i class="fas fa-spinner fa-spin text-3xl text-gray-500 mb-2"></i>
+          <p class="text-gray-400">Loading your orders...</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="p-4 border-t border-gray-700 bg-gray-900/50">
+      <button onclick="closeOrdersModal()" class="w-full bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 p-3 rounded-lg font-bold transition-all duration-300 shadow-lg">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Invoice Modal -->
+<div id="invoice-modal" class="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center hidden z-50 backdrop-blur-sm p-4">
+  <div class="modal-content bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl shadow-2xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-hidden">
+    <div class="flex justify-between items-center p-6 border-b border-gray-700">
+      <h2 class="text-2xl font-bold gradient-text">Order Invoice</h2>
+      <button onclick="closeInvoiceModal()" class="text-gray-400 hover:text-white transition-colors">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="overflow-y-auto max-h-[70vh] p-6">
+      <div id="invoice-content" class="invoice-card p-6">
+        <!-- Invoice content will be loaded here -->
+        <div class="text-center py-8">
+          <i class="fas fa-spinner fa-spin text-3xl text-gray-500 mb-2"></i>
+          <p class="text-gray-400">Loading invoice...</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="p-4 border-t border-gray-700 bg-gray-900/50 flex justify-between">
+      <button onclick="printInvoice()" class="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 p-2 px-4 rounded-lg font-medium transition-all duration-300 shadow flex items-center">
+        <i class="fas fa-print mr-2"></i>
+        Print
+      </button>
+      <button onclick="closeInvoiceModal()" class="bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 p-2 px-4 rounded-lg font-medium transition-all duration-300 shadow">
+        Close
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Success Notification -->
+<div id="success-notification" class="fixed bottom-4 right-4 bg-green-600 text-white p-4 rounded-lg shadow-xl z-50 transform translate-x-full transition-transform duration-300 flex items-start">
+  <i class="fas fa-check-circle mr-2 mt-1"></i>
+  <div>
+    <p class="font-bold" id="success-title">Success!</p>
+    <p class="text-sm" id="success-message">Operation completed successfully</p>
+  </div>
+</div>
+
+<!-- Error Notification -->
+<div id="error-notification" class="fixed bottom-4 right-4 bg-red-600 text-white p-4 rounded-lg shadow-xl z-50 transform translate-x-full transition-transform duration-300 flex items-start">
+  <i class="fas fa-exclamation-circle mr-2 mt-1"></i>
+  <div>
+    <p class="font-bold" id="error-title">Error!</p>
+    <p class="text-sm" id="error-message">Something went wrong</p>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="mt-12 text-gray-500 text-center text-sm z-10">
+  <div class="mb-2">© 2023 FF Kingdom. All rights reserved. Made By Swampod</div>
+  <div class="flex justify-center space-x-4">
+    <a href="#" class="hover:text-yellow-400 transition-colors">Terms of Service</a>
+    <a href="#" class="hover:text-yellow-400 transition-colors">Privacy Policy</a>
+    <a href="#" class="hover:text-yellow-400 transition-colors">Support</a>
+  </div>
+</footer>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAjMuTTJtsvr5i9xAqzQuULciJrEkUCtgg",
+  authDomain: "sheba-khujun.firebaseapp.com",
+  databaseURL: "https://sheba-khujun-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "sheba-khujun",
+  storageBucket: "sheba-khujun.appspot.com",
+  messagingSenderId: "596961253953",
+  appId: "1:596961253953:web:370090c78cca43cdc9c4c0",
+  measurementId: "G-KTFBTHVRXG"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let currentPlayer = null;
+let selectedPackageId = null;
+let currentOrderId = null;
+
+// Show success notification
+function showSuccess(title, message) {
+  document.getElementById('success-title').textContent = title;
+  document.getElementById('success-message').textContent = message;
+  const notif = document.getElementById('success-notification');
+  notif.classList.remove('translate-x-full');
+  setTimeout(() => {
+    notif.classList.add('translate-x-full');
+  }, 3000);
+}
+
+// Show error notification
+function showError(title, message) {
+  document.getElementById('error-title').textContent = title;
+  document.getElementById('error-message').textContent = message;
+  const notif = document.getElementById('error-notification');
+  notif.classList.remove('translate-x-full');
+  setTimeout(() => {
+    notif.classList.add('translate-x-full');
+  }, 3000);
+}
+
+// Toggle button loading state
+function setButtonLoading(buttonId, isLoading) {
+  const btn = document.getElementById(buttonId);
+  if (isLoading) {
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i>Processing...`;
+  } else {
+    btn.disabled = false;
+    if (buttonId === 'login-submit-btn') {
+      btn.innerHTML = `<i class="fas fa-check-circle mr-2"></i>Login / Register`;
+    } else if (buttonId === 'payment-submit-btn') {
+      btn.innerHTML = `<i class="fas fa-check-circle mr-2"></i>Confirm Payment`;
+    }
+  }
+}
+
+// Load Banner
+function loadBanner() {
+  db.ref('banner/text').on('value', snapshot => {
+    const bannerText = snapshot.val() || 'Special offers available! Check our diamond packages.';
+    document.getElementById('banner-text').textContent = bannerText;
+    document.getElementById('banner').classList.add('animate__animated', 'animate__pulse');
+    setTimeout(() => {
+      document.getElementById('banner').classList.remove('animate__animated', 'animate__pulse');
+    }, 1000);
+  });
+}
+
+// Load Diamond Packages
+function loadPackages() {
+  const container = document.getElementById('packages-container');
+  container.innerHTML = '<div class="flex justify-center items-center py-10"><div class="loading-spinner"></div></div>';
+  
+  db.ref('packages').once('value').then(snapshot => {
+    if (!snapshot.exists()) {
+      container.innerHTML = '<div class="col-span-3 text-center py-10 text-gray-400">No packages available at the moment</div>';
+      return;
+    }
+    
+    container.innerHTML = '';
+    snapshot.forEach(pkg => {
+      const data = pkg.val();
+      const card = document.createElement('div');
+      card.className = `package-card bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-xl border border-gray-700 shadow-lg hover:shadow-xl ${currentPlayer ? '' : 'login-required'}`;
+      card.innerHTML = `
+        <div class="relative mb-4">
+          <div class="diamond-shine w-16 h-16 bg-blue-400 rounded-lg rotate-45 mx-auto"></div>
+          <div class="absolute inset-0 flex items-center justify-center">
+            <span class="text-2xl font-bold text-white rotate-[-45deg]">${data.diamonds}</span>
+          </div>
+        </div>
+        <h3 class="text-xl font-bold text-center mb-3">${data.diamonds} Diamonds</h3>
+        <div class="flex justify-center items-center mb-4">
+          ${data.offer ? `
+            <span class="text-lg line-through text-gray-400 mr-2">${data.price}৳</span>
+            <span class="text-2xl font-bold text-yellow-400">${data.offer}৳</span>
+          ` : `
+            <span class="text-2xl font-bold text-yellow-400">${data.price}৳</span>
+          `}
+        </div>
+        <button onclick="checkLoginAndBuy('${pkg.key}')" 
+                class="w-full bg-gradient-to-r from-purple-600 to-blue-500 hover:from-purple-500 hover:to-blue-400 p-3 rounded-lg font-bold transition-all duration-300 shadow-lg">
+          Buy Now
+        </button>
+      `;
+      container.appendChild(card);
+    });
+  }).catch(error => {
+    console.error("Error loading packages:", error);
+    container.innerHTML = '<div class="col-span-3 text-center py-10 text-red-400">Failed to load packages. Please try again.</div>';
+  });
+}
+
+// Check Login Before Buy
+function checkLoginAndBuy(pkgId) {
+  if(!currentPlayer){
+    showError("Login Required", "Please login to purchase diamonds");
+    openLoginModal();
+    return;
+  }
+  openPaymentModal(pkgId);
+}
+
+// Player Login / Register
+function playerLogin() {
+  const username = document.getElementById('player-username').value.trim();
+  const email = document.getElementById('player-email').value.trim();
+  
+  if(!username || !email){ 
+    showError("Input Required", "Please enter both username and email");
+    return; 
+  }
+  
+  if(!/^\S+@\S+\.\S+$/.test(email)) {
+    showError("Invalid Email", "Please enter a valid email address");
+    return;
+  }
+
+  setButtonLoading('login-submit-btn', true);
+  
+  // Check if email already exists
+  db.ref('players').orderByChild('email').equalTo(email).once('value').then(snapshot => {
+    if(snapshot.exists()){
+      const key = Object.keys(snapshot.val())[0];
+      const playerData = snapshot.val()[key];
+      
+      if (playerData.banned) {
+        showError("Account Banned", "Your account has been banned. Contact support.");
+        setButtonLoading('login-submit-btn', false);
+        return;
+      }
+      
+      currentPlayer = { key, ...playerData };
+      localStorage.setItem('ffk_player', JSON.stringify(currentPlayer));
+      showSuccess("Welcome Back", `Logged in as ${currentPlayer.username}`);
+      closeLoginModal();
+      showDashboard();
+      loadTransactionHistory();
+      updateLoginUI();
+      loadPackages(); // Refresh packages to show buy buttons
+    } else {
+      // Check if username exists
+      db.ref('players').orderByChild('username').equalTo(username).once('value').then(usernameSnapshot => {
+        if (usernameSnapshot.exists()) {
+          showError("Username Taken", "This username is already taken");
+          setButtonLoading('login-submit-btn', false);
+          return;
+        }
+        
+        // Create new account
+        const newRef = db.ref('players').push();
+        newRef.set({ 
+          username, 
+          email, 
+          diamonds: 0, 
+          banned: false,
+          createdAt: firebase.database.ServerValue.TIMESTAMP
+        }).then(() => {
+          currentPlayer = { 
+            key: newRef.key, 
+            username, 
+            email, 
+            diamonds: 0, 
+            banned: false 
+          };
+          localStorage.setItem('ffk_player', JSON.stringify(currentPlayer));
+          showSuccess("Account Created", `Welcome to FF Kingdom, ${username}!`);
+          closeLoginModal();
+          showDashboard();
+          loadTransactionHistory();
+          updateLoginUI();
+          loadPackages(); // Refresh packages to show buy buttons
+        }).catch(error => {
+          showError("Registration Failed", "Could not create account. Please try again.");
+          console.error("Registration error:", error);
+        });
+      });
+    }
+  }).catch(error => {
+    showError("Login Failed", "Could not authenticate. Please try again.");
+    console.error("Login error:", error);
+  }).finally(() => {
+    setButtonLoading('login-submit-btn', false);
+  });
+}
+
+// Show Dashboard After Login
+function showDashboard() {
+  document.getElementById('player-dashboard').classList.remove('hidden');
+  document.getElementById('player-name').textContent = currentPlayer.username;
+  document.getElementById('player-diamonds').textContent = currentPlayer.diamonds;
+}
+
+// Update UI based on login state
+function updateLoginUI() {
+  if(currentPlayer) {
+    document.getElementById('login-button').classList.add('hidden');
+    document.getElementById('orders-button').classList.remove('hidden');
+  } else {
+    document.getElementById('login-button').classList.remove('hidden');
+    document.getElementById('orders-button').classList.add('hidden');
+  }
+}
+
+// Load transaction history
+function loadTransactionHistory() {
+  const historyContainer = document.getElementById('transaction-history');
+  historyContainer.innerHTML = '<div class="animate-pulse text-center py-4">Loading history...</div>';
+  
+  db.ref('orders').orderByChild('uid').equalTo(currentPlayer.key).limitToLast(5).once('value').then(snapshot => {
+    if(!snapshot.exists()) {
+      historyContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No recent transactions</p>';
+      return;
+    }
+    
+    historyContainer.innerHTML = '';
+    snapshot.forEach(order => {
+      const data = order.val();
+      const date = new Date(data.timestamp || Date.now()).toLocaleString();
+      const statusClass = data.status === 'Completed' ? 'text-green-400' : 
+                         data.status === 'Failed' ? 'text-red-400' : 'text-yellow-400';
+      
+      const item = document.createElement('div');
+      item.className = 'py-3 border-b border-gray-800 last:border-0';
+      item.innerHTML = `
+        <div class="flex justify-between items-center">
+          <span class="font-medium">${data.diamonds} 💎</span>
+          <span class="text-sm ${statusClass}">${data.status}</span>
+        </div>
+        <div class="flex justify-between text-sm text-gray-400 mt-1">
+          <span>${date}</span>
+          <span>${data.price}৳</span>
+        </div>
+      `;
+      historyContainer.appendChild(item);
+    });
+  }).catch(error => {
+    console.error("Error loading transaction history:", error);
+    historyContainer.innerHTML = '<p class="text-red-400 text-center py-4">Failed to load history</p>';
+  });
+}
+
+// Load user orders
+function loadUserOrders() {
+  const ordersContainer = document.getElementById('orders-list');
+  ordersContainer.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-3xl text-gray-500 mb-2"></i><p class="text-gray-400">Loading your orders...</p></div>';
+  
+  db.ref('orders').orderByChild('uid').equalTo(currentPlayer.key).once('value').then(snapshot => {
+    if(!snapshot.exists()) {
+      ordersContainer.innerHTML = '<div class="col-span-2 text-center py-8"><i class="fas fa-shopping-bag text-3xl text-gray-500 mb-2"></i><p class="text-gray-400">No orders found</p></div>';
+      return;
+    }
+    
+    ordersContainer.innerHTML = '';
+    snapshot.forEach(order => {
+      const data = order.val();
+      const date = new Date(data.timestamp || Date.now()).toLocaleString();
+      const statusClass = getStatusClass(data.status);
+      
+      const orderCard = document.createElement('div');
+      orderCard.className = 'bg-gray-800 rounded-xl p-4 border border-gray-700 hover:border-yellow-500 transition-colors';
+      orderCard.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+          <div>
+            <h3 class="font-bold text-lg">${data.diamonds} Diamonds</h3>
+            <p class="text-sm text-gray-400">Order #${order.key.substring(0, 8)}</p>
+          </div>
+          <span class="status-badge ${statusClass}">${data.status}</span>
+        </div>
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-400">Date:</span>
+          <span class="text-sm">${date}</span>
+        </div>
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-400">Amount:</span>
+          <span class="font-bold text-yellow-400">${data.price}৳</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400">Method:</span>
+          <span class="text-sm capitalize">${data.method}</span>
+        </div>
+        <button onclick="viewInvoice('${order.key}')" class="w-full mt-3 bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500 p-2 rounded-lg text-sm font-medium transition-all duration-300 shadow">
+          View Invoice
+        </button>
+      `;
+      ordersContainer.appendChild(orderCard);
+    });
+  }).catch(error => {
+    console.error("Error loading orders:", error);
+    ordersContainer.innerHTML = '<div class="col-span-2 text-center py-8"><i class="fas fa-exclamation-triangle text-3xl text-red-500 mb-2"></i><p class="text-gray-400">Failed to load orders</p></div>';
+  });
+}
+
+function getStatusClass(status) {
+  switch(status) {
+    case 'Pending': return 'order-status-pending';
+    case 'Processing': return 'order-status-processing';
+    case 'Completed': return 'order-status-completed';
+    case 'Rejected': return 'order-status-rejected';
+    default: return 'bg-gray-600';
+  }
+}
+
+// View invoice for an order
+function viewInvoice(orderId) {
+  currentOrderId = orderId;
+  const invoiceContent = document.getElementById('invoice-content');
+  invoiceContent.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-3xl text-gray-500 mb-2"></i><p class="text-gray-400">Loading invoice...</p></div>';
+  
+  db.ref(`orders/${orderId}`).once('value').then(snapshot => {
+    const order = snapshot.val();
+    if(!order) {
+      invoiceContent.innerHTML = '<div class="text-center py-8"><i class="fas fa-exclamation-triangle text-3xl text-red-500 mb-2"></i><p class="text-gray-400">Order not found</p></div>';
+      return;
+    }
+    
+    const date = new Date(order.timestamp || Date.now()).toLocaleString();
+    const statusClass = getStatusClass(order.status);
+    
+    invoiceContent.innerHTML = `
+      <div class="flex justify-between items-center mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white">FF Kingdom</h2>
+          <p class="text-gray-300">Diamond Shop</p>
+        </div>
+        <div class="text-right">
+          <p class="text-gray-300">Invoice #${orderId.substring(0, 8)}</p>
+          <p class="text-gray-400 text-sm">${date}</p>
+        </div>
+      </div>
+      
+      <div class="bg-gray-800/50 rounded-lg p-4 mb-6">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-300">Customer:</span>
+          <span class="font-medium">${order.username}</span>
+        </div>
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-300">Email:</span>
+          <span class="font-medium">${order.email}</span>
+        </div>
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-300">Free Fire UID:</span>
+          <span class="font-medium">${order.uid || 'Not provided'}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-300">Status:</span>
+          <span class="status-badge ${statusClass}">${order.status}</span>
+        </div>
+      </div>
+      
+      <div class="bg-gray-800/50 rounded-lg p-4 mb-6">
+        <h3 class="text-lg font-bold mb-3 border-b border-gray-700 pb-2">Order Details</h3>
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-300">Package:</span>
+          <span class="font-medium">${order.diamonds} Diamonds</span>
+        </div>
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-300">Payment Method:</span>
+          <span class="font-medium capitalize">${order.method}</span>
+        </div>
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-300">Transaction ID:</span>
+          <span class="font-medium">${order.transactionId || 'N/A'}</span>
+        </div>
+      </div>
+      
+      <div class="bg-gray-800/50 rounded-lg p-4">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-300">Subtotal:</span>
+          <span class="font-medium">${order.price}৳</span>
+        </div>
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-gray-300">Processing Fee:</span>
+          <span class="font-medium">0৳</span>
+        </div>
+        <div class="flex justify-between items-center text-lg font-bold mt-4 pt-4 border-t border-gray-700">
+          <span>Total:</span>
+          <span class="text-yellow-400">${order.price}৳</span>
+        </div>
+      </div>
+      
+      <div class="mt-6 pt-6 border-t border-gray-700 text-center text-sm text-gray-400">
+        <p>Thank you for your purchase!</p>
+        <p class="mt-1">Diamonds will be added to your account after verification</p>
+      </div>
+    `;
+    
+    openInvoiceModal();
+  }).catch(error => {
+    console.error("Error loading invoice:", error);
+    invoiceContent.innerHTML = '<div class="text-center py-8"><i class="fas fa-exclamation-triangle text-3xl text-red-500 mb-2"></i><p class="text-gray-400">Failed to load invoice</p></div>';
+  });
+}
+
+// Print invoice
+function printInvoice() {
+  const invoiceContent = document.getElementById('invoice-content').innerHTML;
+  const originalContent = document.body.innerHTML;
+  
+  document.body.innerHTML = `
+    <div class="p-6 bg-white text-gray-800" style="font-family: 'Poppins', sans-serif;">
+      ${invoiceContent}
+    </div>
+  `;
+  
+  window.print();
+  document.body.innerHTML = originalContent;
+  updateLoginUI();
+}
+
+// Logout
+function logout() {
+  currentPlayer = null;
+  localStorage.removeItem('ffk_player');
+  document.getElementById('player-dashboard').classList.add('hidden');
+  showSuccess("Logged Out", "You have been successfully logged out");
+  updateLoginUI();
+  loadPackages(); // Refresh packages to show login overlay
+}
+
+// Modal Functions
+function openLoginModal() { 
+  document.getElementById('login-modal').classList.remove('hidden'); 
+  document.body.classList.add('modal-open'); 
+}
+function closeLoginModal() { 
+  document.getElementById('login-modal').classList.add('hidden'); 
+  document.body.classList.remove('modal-open'); 
+}
+
+function openPaymentModal(pkgId) {
+  selectedPackageId = pkgId;
+  document.getElementById('transaction-id').value = '';
+  document.getElementById('player-uid').value = '';
+  document.getElementById('payment-modal').classList.remove('hidden');
+  document.body.classList.add('modal-open');
+  
+  // Load package details
+  db.ref('packages/' + pkgId).once('value').then(snapshot => {
+    const pkg = snapshot.val();
+    document.getElementById('payment-package-name').textContent = `${pkg.diamonds} Diamonds`;
+    document.getElementById('payment-package-diamonds').textContent = pkg.diamonds;
+    document.getElementById('payment-package-price').textContent = `${pkg.offer || pkg.price}৳`;
+  }).catch(error => {
+    console.error("Error loading package:", error);
+    showError("Error", "Could not load package details");
+    closePaymentModal();
+  });
+  
+  // Update payment number based on method
+  db.ref('payment_numbers').once('value').then(snapshot => {
+    const numbers = snapshot.val() || { bkash: '01701798762', nagad: '01701798762', rocket: '01701798762' };
+    document.getElementById('payment-number').textContent = numbers[document.getElementById('payment-method').value];
+  });
+}
+
+function closePaymentModal() {
+  selectedPackageId = null;
+  document.getElementById('payment-modal').classList.add('hidden');
+  document.body.classList.remove('modal-open');
+}
+
+function openOrdersModal() {
+  loadUserOrders();
+  document.getElementById('orders-modal').classList.remove('hidden');
+  document.body.classList.add('modal-open');
+}
+
+function closeOrdersModal() {
+  document.getElementById('orders-modal').classList.add('hidden');
+  document.body.classList.remove('modal-open');
+}
+
+function openInvoiceModal() {
+  document.getElementById('invoice-modal').classList.remove('hidden');
+  document.body.classList.add('modal-open');
+}
+
+function closeInvoiceModal() {
+  document.getElementById('invoice-modal').classList.add('hidden');
+  document.body.classList.remove('modal-open');
+}
+
+// Update payment number when method changes
+document.getElementById('payment-method').addEventListener('change', function() {
+  db.ref('payment_numbers').once('value').then(snapshot => {
+    const numbers = snapshot.val() || { bkash: '01701798762', nagad: '01701798762', rocket: '01701798762' };
+    document.getElementById('payment-number').textContent = numbers[this.value];
+  });
+});
+
+function submitPayment() {
+  const transactionId = document.getElementById('transaction-id').value.trim();
+  const method = document.getElementById('payment-method').value;
+  const playerUID = document.getElementById('player-uid').value.trim();
+  
+  if(!transactionId){ 
+    showError("Input Required", "Please enter transaction ID"); 
+    return; 
+  }
+  
+  if(!playerUID) {
+    showError("Input Required", "Please enter your Free Fire UID");
+    return;
+  }
+
+  setButtonLoading('payment-submit-btn', true);
+  
+  db.ref('packages/' + selectedPackageId).once('value').then(snapshot => {
+    const pkg = snapshot.val();
+    const price = pkg.offer || pkg.price;
+
+    const orderData = {
+      uid: currentPlayer.key,
+      username: currentPlayer.username,
+      email: currentPlayer.email,
+      playerUID: playerUID,
+      packageId: selectedPackageId,
+      diamonds: pkg.diamonds,
+      price: price,
+      status: 'Pending',
+      transactionId: transactionId,
+      method: method,
+      timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    db.ref('orders').push(orderData).then(() => {
+      showSuccess("Order Placed", `${pkg.diamonds} diamonds will be added after verification`);
+      loadTransactionHistory();
+      closePaymentModal();
+    }).catch(error => {
+      showError("Order Failed", "Could not place order. Please try again.");
+      console.error("Order submission error:", error);
+    });
+  }).catch(error => {
+    showError("Error", "Could not load package details");
+    console.error("Package load error:", error);
+  }).finally(() => {
+    setButtonLoading('payment-submit-btn', false);
+  });
+}
+
+// Update Player Diamonds After Approval
+db.ref('players').on('value', snapshot => {
+  if(currentPlayer){
+    const updated = snapshot.child(currentPlayer.key).val();
+    if(updated){
+      currentPlayer.diamonds = updated.diamonds || 0;
+      document.getElementById('player-diamonds').textContent = currentPlayer.diamonds;
+      
+      // Add animation when diamonds change
+      if(updated.diamonds !== currentPlayer.diamonds) {
+        const diamondsElement = document.getElementById('player-diamonds');
+        diamondsElement.classList.add('animate__animated', 'animate__bounceIn');
+        setTimeout(() => {
+          diamondsElement.classList.remove('animate__animated', 'animate__bounceIn');
+        }, 1000);
+      }
+    }
+  }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  // Check for existing session
+  const savedPlayer = localStorage.getItem('ffk_player');
+  if (savedPlayer) {
+    try {
+      currentPlayer = JSON.parse(savedPlayer);
+      // Verify player still exists in database
+      db.ref('players/' + currentPlayer.key).once('value').then(snapshot => {
+        if (snapshot.exists()) {
+          const playerData = snapshot.val();
+          if (playerData.banned) {
+            localStorage.removeItem('ffk_player');
+            currentPlayer = null;
+            showError("Account Banned", "Your account has been banned. Contact support.");
+          } else {
+            currentPlayer = { ...currentPlayer, ...playerData };
+            showDashboard();
+            updateLoginUI();
+          }
+        } else {
+          localStorage.removeItem('ffk_player');
+          currentPlayer = null;
+        }
+      });
+    } catch (e) {
+      localStorage.removeItem('ffk_player');
+      currentPlayer = null;
+    }
+  }
+  
+  loadBanner();
+  loadPackages();
+  updateLoginUI();
+});
+</script>
+</body>
+</html>
